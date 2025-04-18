@@ -1,0 +1,1 @@
+// O uso do prisma dispensa esse arquivo, mas ele pode ser útil para o futuro.
