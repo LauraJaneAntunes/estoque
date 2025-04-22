@@ -45,7 +45,7 @@ backend/
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone https://github.com/LauraJaneAntunes/estoque.git
 cd seu-repositorio
 ```
 
@@ -97,8 +97,6 @@ Este projeto está sob a licença MIT.
 
 ---
 
-
-
 ## Lista de Commits
 
 * `feat: adicionar endpoint de cadastro de produto`
@@ -114,8 +112,6 @@ Este projeto está sob a licença MIT.
 * `revert: reverter "feat: adicionar endpoint de cadastro de produto"`
 
 ---
-
-
 
 ## 🧑‍💻 Exemplos de Requisições
 
