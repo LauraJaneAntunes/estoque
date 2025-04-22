@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import UserController from '../controllers/UserController';
+import { authenticateToken, authorizeAdmin, authorizeUser } from '../middlewares/authMiddleware';
 
 const userRoutes = Router();
 
@@ -11,9 +12,9 @@ userRoutes.post('/reset-password', UserController.resetPassword); // Redefiniç�
 userRoutes.get('/verify-email/:token', UserController.verifyEmail); // Verificação de email 
 
 // Rotas protegidas
-userRoutes.get('/users', UserController.getAll);   // Listar todos os usuários
-userRoutes.get('/users/:id', UserController.getById);  // Buscar usuário por ID
-userRoutes.put('/users/:id', UserController.update);  // Atualizar usuário
-userRoutes.delete('/users/:id', UserController.delete); // Deletar usuário
+userRoutes.get('/users', authenticateToken,  authorizeAdmin, UserController.getAll);   // Listar todos os usuários - somente admin
+userRoutes.get('/users/:id', authenticateToken, authorizeUser, UserController.getById);  // Buscar usuário por ID
+userRoutes.put('/users/:id', authenticateToken, authorizeUser, UserController.update);  // Atualizar usuário
+userRoutes.delete('/users/:id', authenticateToken, authorizeAdmin, UserController.delete); // Deletar usuário - somente admin
 
 export default userRoutes;

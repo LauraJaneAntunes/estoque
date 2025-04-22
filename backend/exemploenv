@@ -1,1 +1,10 @@
-DATABASE_URL="mysql://root@localhost:3306/estoque"
+# .env
+
+# Chave secreta usada para assinar/verificar JWTs
+JWT_SECRET=sua_chave_super_secreta
+
+# Porta do servidor
+PORT=3000
+
+# Configurações do banco de dados (exemplo com MySQL)
+DATABASE_URL="mysql://usuario:senha@localhost:3306/nome_do_banco"

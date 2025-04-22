@@ -8,9 +8,15 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                      Int       @id @default(autoincrement())
+  name                    String
+  email                   String    @unique
+  password                String?   // se você quiser suportar login com senha
+  isEmailVerified         Boolean   @default(false)
+  emailVerificationToken  String?   // para verificar email
+  passwordResetToken      String?   // para reset de senha
+  passwordResetExpires    DateTime? // para expiração do reset
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  role                    String    @default("user")
 }

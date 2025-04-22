@@ -14,27 +14,31 @@ API RESTful desenvolvida em Node.js com TypeScript, Prisma ORM e MySQL, seguindo
 - [dotenv](https://www.npmjs.com/package/dotenv)
 - [ts-node-dev](https://www.npmjs.com/package/ts-node-dev)
 
+* JWT (jsonwebtoken)
+* Nodemailer
+* bcrypt
+
 ---
 
 ## 📁 Estrutura do Projeto
 
 ```
 backend/
-├── prisma/
+├── prisma/                # Configuração do banco de dados
 │   ├── schema.prisma      # Modelos do banco de dados
-│   └── migrations/        # Histórico de migrações
+│   ├── migrations/        # Histórico de migrações
 ├── src/
-│   ├── config/            # Configuração do Prisma Client
+│   ├── config/            # Configurações globais
 │   ├── controllers/       # Camada de controle (Express)
-│   ├── models/            # Camada de modelo (opcional se usar direto o Prisma)
+│   ├── middlewares/       # Middlewares de autenticação e autorização
 │   ├── routes/            # Rotas da aplicação
 │   ├── services/          # Regras de negócio
-│   ├── app.ts             # App Express
+│   ├── utils/             # Utilitários (envio de email, autenticação)
+│   ├── app.ts             # Configuração do Express
 │   └── server.ts          # Inicialização do servidor
 ├── .env                   # Variáveis de ambiente (não versionado)
-├── .gitignore
-├── tsconfig.json
-├── package.json
+├── tsconfig.json          # Configuração do TypeScript
+├── package.json           # Dependências do projeto
 └── README.md
 ```
 
@@ -46,7 +50,8 @@ backend/
 
 ```bash
 git clone https://github.com/LauraJaneAntunes/estoque.git
-cd seu-repositorio
+cd estoque
+cd backend
 ```
 
 ### 2. Instale as dependências
@@ -61,8 +66,14 @@ Crie um banco de dados no MySQL com o nome `estoque`.
 
 Depois, configure o arquivo `.env`:
 
-```env
 DATABASE_URL="mysql://root@localhost:3306/estoque"
+JWT_SECRET=SEU_SEGREDO_AQUI
+EMAIL_USER=seuemail@gmail.com
+EMAIL_PASS=sua_app_password
+PORT=3000
+
+```env
+span
 ```
 
 ### 4. Crie o schema no banco com Prisma
@@ -84,10 +95,25 @@ Servidor rodando em: `http://localhost:3000`
 ## ✨ Funcionalidades previstas
 
 - [X] Cadastro de produtos
-- [ ] Atualização de estoque
-- [ ] Histórico de movimentações
-- [ ] Login/autenticação com JWT
-- [ ] Integração com frontend React Native
+- [X] Atualização de estoque
+- [X] Histórico de movimentações
+- [X] Login/autenticação com JWT
+- [X] Integração com frontend React Native
+- [X] Recuperação de Senha via Email
+- [X] Verificação de Email ao cadastrar
+- [X] Gerenciamento de Usuários (admin)
+
+---
+
+
+
+## 🔑 Autenticação e Segurança
+
+A API usa **JWT** para autenticação e define middlewares para controle de acesso:
+
+* `authenticateToken` → Garante que o usuário está autenticado
+* `authorizeAdmin` → Apenas usuários admin podem acessar certas rotas
+* `authorizeUser` → Apenas o próprio usuário pode acessar seus dados
 
 ---
 
