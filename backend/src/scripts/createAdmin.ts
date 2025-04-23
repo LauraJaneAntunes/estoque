@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
@@ -15,16 +16,16 @@ const createAdminUser = async () => {
   }
 
   // Criação do hash da senha
-  const hashedPassword = await bcrypt.hash('senhaAdmin123', 10); // Alterar a senha conforme necessário
+  const hashedPassword = await bcrypt.hash('Senh@123', 10);
 
   // Criação do usuário admin
   const adminUser = await prisma.user.create({
     data: {
       name: 'Admin',
-      email: 'admin@example.com', // Altere conforme necessário
+      email: 'admin@email.com',
       password: hashedPassword,
-      role: 'admin', // Define o papel como 'admin'
-      isEmailVerified: true, // Como exemplo, definimos como verdadeiro
+      role: 'admin',
+      isEmailVerified: true,
     },
   });
 

@@ -1,6 +1,10 @@
-// src/middlewares/authMiddleware.ts
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request as ExpressRequest, Response, NextFunction } from 'express';
+import jwt, { JwtPayload } from 'jsonwebtoken';
+
+// Estenda o tipo Request inline
+interface Request extends ExpressRequest {
+  user?: JwtPayload & { userId: number; role: string };
+}
 
 export const authenticateToken = (
   req: Request,
