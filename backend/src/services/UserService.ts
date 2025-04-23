@@ -1,93 +1,46 @@
 import Prisma from '../config/prismaClient';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
 import { sendEmail } from '../utils/emailUtils';
+import { hashPassword, comparePassword } from '../utils/passwordUtils';
 
 class UserService {
   // Criar um novo usuário
-  async createUser(data: { name: string, email: string, role?: string }): Promise<any> {
-    const role = data.role || 'user'; // Definindo o papel padrão como 'user'
-    // Gerar token de verificação de email
+  async createUser(data: { name: string, email: string, password: string; role?: string }): Promise<any> {
+    const role = data.role || 'user';
     const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+
+    const hashedPassword = await hashPassword(data.password);
 
     const user = await Prisma.user.create({
       data: {
-        ...data,
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
         isEmailVerified: false,
         emailVerificationToken,
         role,
       },
     });
 
-    // Enviar email de verificação (você pode personalizar o link)
     await sendEmail(user.email, 'Verifique seu email', `Clique aqui para verificar: http://localhost:3000/verify-email/${emailVerificationToken}`);
 
     return user;
   }
 
-  // Criar um novo administrador
-  async createAdminUser(data: { name: string; email: string; password: string }): Promise<any> {
-    const role = "admin";  // Definindo o papel como "admin"
+  // Login do usuário
+  async login(email: string, password: string): Promise<void> {
+    const user = await this.getUserByEmail(email);
+    if (!user) throw new Error('Usuário não encontrado');
   
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) throw new Error('Credenciais inválidas');
   
-    const user = await Prisma.user.create({
-      data: {
-        ...data,
-        role,  // Atribuindo o papel "admin"
-        isEmailVerified: false,
-        emailVerificationToken,
-      },
-    });
-  
-    await sendEmail(user.email, 'Verifique seu email', `Clique aqui para verificar: http://localhost:3000/verify-email/${emailVerificationToken}`);
+    if (!user.isEmailVerified) throw new Error('E-mail não verificado');
   
     return user;
   }
 
-  // Listar todos os usuários
-  async getAllUsers(): Promise<any[]> {
-    return await Prisma.user.findMany();
-  }
-
-  // Listar usuários com filtro de Administrador
-  async getAdmins(): Promise<any[]> {
-    return await Prisma.user.findMany({
-      where: {
-        role: "admin",
-      },
-    });
-  }
-
-  // Buscar por ID
-  async getUserById(id: number): Promise<any | null> {
-    return await Prisma.user.findUnique({ where: { id } });
-  }
-
-  // Buscar por email
-  async getUserByEmail(email: string): Promise<any | null> {
-    return await Prisma.user.findUnique({ where: { email } });
-  }
-
-  // Atualizar usuário
-  async updateUser(id: number, data: { name: string, email: string }): Promise<any> {
-    return await Prisma.user.update({ where: { id }, data });
-  }
-
-  // Atualizar usuário para administrador
-  async updateUserRole(id: number, role: string): Promise<any> {
-    return await Prisma.user.update({
-      where: { id },
-      data: { role },
-    });
-  }
-
-  // Deletar usuário
-  async deleteUser(id: number): Promise<void> {
-    await Prisma.user.delete({ where: { id } });
-  }
-
-  // Enviar email de recuperação de senha
+  // Enviar e-mail de recuperação de senha
   async sendPasswordResetEmail(email: string): Promise<void> {
     const user = await this.getUserByEmail(email);
     if (!user) throw new Error('Usuário não encontrado');
@@ -106,7 +59,7 @@ class UserService {
     await sendEmail(email, 'Redefinição de senha', `Use este token: ${token}`);
   }
 
-  // Redefinir a senha com token
+  // Resetar senha via token
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const user = await Prisma.user.findFirst({
       where: {
@@ -117,7 +70,7 @@ class UserService {
 
     if (!user) throw new Error('Token inválido ou expirado');
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await hashPassword(newPassword);
 
     await Prisma.user.update({
       where: { id: user.id },
@@ -129,7 +82,7 @@ class UserService {
     });
   }
 
-  // Verificar o email
+  // Verificar e-mail do usuário
   async verifyEmail(token: string): Promise<void> {
     const user = await Prisma.user.findFirst({
       where: {
@@ -145,6 +98,68 @@ class UserService {
         isEmailVerified: true,
         emailVerificationToken: null,
       },
+    });
+  }
+
+  // Listar todos os usuários
+  async getAllUsers(): Promise<any[]> {
+    return await Prisma.user.findMany();
+  }
+
+  // Buscar usuário por ID
+  async getUserById(id: number): Promise<any | null> {
+    return await Prisma.user.findUnique({ where: { id } });
+  }
+
+  // Buscar por email
+  async getUserByEmail(email: string): Promise<any | null> {
+    return await Prisma.user.findUnique({ where: { email } });
+  }
+
+  // Atualizar dados do usuário
+  async updateUser(id: number, data: { name: string, email: string }): Promise<any> {
+    return await Prisma.user.update({ where: { id }, data });
+  }
+
+  // Deletar usuário
+  async deleteUser(id: number): Promise<void> {
+    await Prisma.user.delete({ where: { id } });
+  }
+
+  // Criar um novo administrador
+  async createAdminUser(data: { name: string; email: string; password: string; role?: string }): Promise<any> {
+    const role = "admin";
+    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const hashedPassword = await hashPassword(data.password);
+
+    const user = await Prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+        role,
+        isEmailVerified: false,
+        emailVerificationToken,
+      },
+    });
+
+    await sendEmail(user.email, 'Verifique seu email', `Clique aqui para verificar: http://localhost:3000/verify-email/${emailVerificationToken}`);
+
+    return user;
+  }
+
+  // Atualizar usuário para administrador
+  async updateUserRole(id: number, role: string): Promise<any> {
+    return await Prisma.user.update({
+      where: { id },
+      data: { role },
+    });
+  }
+
+  // Listar usuários com filtro de Administrador
+  async getAdmins(): Promise<any[]> {
+    return await Prisma.user.findMany({
+      where: { role: "admin" },
     });
   }
 }

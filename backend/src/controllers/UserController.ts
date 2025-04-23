@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/authUtils';
 import UserService from '../services/UserService';
+import { comparePassword } from '../utils/passwordUtils';
 
 class UserController {
-  // Criar novo usuário
+  // Criar um novo usuário
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const { name, email } = req.body;
-      const user = await UserService.createUser({ name, email });
+      const { name, email, password } = req.body;
+      const user = await UserService.createUser({ name, email, password });
 
       const token = generateToken(user.id, user.role);
 
-      const { password, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       res.status(201).json({ user: userWithoutPassword, token });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -25,7 +25,12 @@ class UserController {
       const { email, password } = req.body;
       const user = await UserService.getUserByEmail(email);
 
-      const isMatch = await bcrypt.compare(password, user.password);
+      if (!user) {
+        res.status(404).json({ message: 'Usuário não encontrado' });
+        return;
+      }
+
+      const isMatch = await comparePassword(password, user.password);
       if (!isMatch) {
         res.status(401).json({ message: 'Credenciais inválidas' });
         return;
@@ -97,7 +102,24 @@ class UserController {
     }
   }
 
-  // Atualizar usuário
+  // Buscar usuário por email
+  async getUserByEmail(req: Request, res: Response): Promise<void> {
+    try {
+      const { email } = req.params;  // Pegando o email da URL
+      const user = await UserService.getUserByEmail(email);  // Chama o service para buscar o usuário por email
+
+      if (!user) {
+        res.status(404).json({ message: 'Usuário não encontrado' });
+        return;
+      }
+
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Atualizar dados do usuário
   async update(req: Request, res: Response): Promise<void> {
     try {
       const updatedUser = await UserService.updateUser(Number(req.params.id), req.body);
@@ -112,6 +134,41 @@ class UserController {
     try {
       await UserService.deleteUser(Number(req.params.id));
       res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Criar um novo administrador
+  async createAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const { name, email, password } = req.body;
+      const user = await UserService.createAdminUser({ name, email, password });
+
+      const token = generateToken(user.id, user.role);
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json({ user: userWithoutPassword, token });
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Atualizar usuário para administrador
+  async updateUserRoleToAdmin(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = Number(req.params.id);
+      const updatedUser = await UserService.updateUserRole(userId, 'admin');
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  // Listar usuários com filtro de Administrador
+  async getAdmins(req: Request, res: Response): Promise<void> {
+    try {
+      const admins = await UserService.getAdmins();
+      res.status(200).json(admins);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

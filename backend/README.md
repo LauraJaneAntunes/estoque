@@ -66,7 +66,7 @@ Crie um banco de dados no MySQL com o nome `estoque`.
 
 Depois, configure o arquivo `.env`:
 
-DATABASE_URL="mysql://root@localhost:3306/estoque"
+DATABASE_URL="mysql://usuario:senha@localhost:3306/estoque"
 JWT_SECRET=SEU_SEGREDO_AQUI
 EMAIL_USER=seuemail@gmail.com
 EMAIL_PASS=sua_app_password
@@ -81,6 +81,8 @@ span
 ```bash
 npx prisma migrate dev --name init
 ```
+obs.: se fizer alguma alteração no schema.prisma, rode: npx prisma generate
+
 
 ### 5. Rode o servidor
 
